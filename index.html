@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESG 永續發展儀表板</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- 引入 Phosphor Icons 圖示庫 -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- 設定 Tailwind 自訂主題顏色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        esg: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        /* 自訂捲軸樣式 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* 針對暗黑模式的自訂設定 */
+        html.dark body { background-color: #0f172a; color: #f8fafc; }
+        html.dark ::-webkit-scrollbar-thumb { background: #475569; }
+        html.dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased flex h-screen overflow-hidden dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
+
+    <!-- 側邊欄 (Sidebar) -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 hidden md:flex flex-col justify-between dark:bg-slate-800 dark:border-slate-700 transition-colors duration-300">
+        <div>
+            <!-- Logo 區域 -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-700">
+                <i class="ph-fill ph-leaf text-esg-600 dark:text-esg-500 text-2xl mr-2"></i>
+                <span class="text-lg font-bold text-slate-900 dark:text-white tracking-wider">ESG 永續儀表板</span>
+            </div>
+            <!-- 導覽選單 -->
+            <nav class="p-4 space-y-1">
+                <a href="#" class="flex items-center px-4 py-3 bg-esg-50 text-esg-700 rounded-xl font-medium transition-colors dark:bg-esg-900/30 dark:text-esg-400">
+                    <i class="ph ph-squares-four text-xl mr-3"></i>
+                    總覽 (Overview)
+                </a>
+                <a href="#" class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50 dark:hover:text-white">
+                    <i class="ph ph-tree text-xl mr-3"></i>
+                    環境 (Environment)
+                </a>
+                <a href="#" class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50 dark:hover:text-white">
+                    <i class="ph ph-users text-xl mr-3"></i>
+                    社會 (Social)
+                </a>
+                <a href="#" class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50 dark:hover:text-white">
+                    <i class="ph ph-scales text-xl mr-3"></i>
+                    治理 (Governance)
+                </a>
+                <a href="#" class="flex items-center px-4 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl font-medium transition-colors dark:text-slate-300 dark:hover:bg-slate-700/50 dark:hover:text-white">
+                    <i class="ph ph-file-text text-xl mr-3"></i>
+                    永續報告書
+                </a>
+            </nav>
+        </div>
+        
+        <!-- 底部設定 -->
+        <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+            <a href="#" class="flex items-center px-4 py-2 text-slate-600 hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:text-slate-200">
+                <i class="ph ph-gear text-xl mr-3"></i>
+                系統設定
+            </a>
+        </div>
+    </aside>
+
+    <!-- 主要內容區 (Main Content) -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <!-- 頂部導覽列 (Top Header) -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 dark:bg-slate-800 dark:border-slate-700 transition-colors duration-300">
+            <div class="flex items-center md:hidden">
+                <button class="text-slate-500 hover:text-slate-700 focus:outline-none dark:text-slate-400 dark:hover:text-slate-200">
+                    <i class="ph ph-list text-2xl"></i>
+                </button>
+                <span class="ml-3 text-lg font-bold text-slate-900 dark:text-white">ESG Dashboard</span>
+            </div>
+            <div class="hidden md:block">
+                <h1 class="text-xl font-semibold text-slate-800 dark:text-slate-100">2026 年度企業永續表現</h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <!-- 深色模式切換按鈕 -->
+                <button id="themeToggleBtn" class="text-slate-500 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition-colors dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-700 focus:outline-none">
+                    <i id="themeIcon" class="ph ph-moon text-xl"></i>
+                </button>
+
+                <button class="text-slate-500 hover:text-slate-700 relative dark:text-slate-400 dark:hover:text-slate-200">
+                    <i class="ph ph-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                </button>
+                <div class="h-8 w-8 rounded-full bg-esg-100 flex items-center justify-center text-esg-700 font-bold border border-esg-200 cursor-pointer dark:bg-esg-900/50 dark:text-esg-400 dark:border-esg-700/50">
+                    HR
+                </div>
+            </div>
+        </header>
+
+        <!-- 儀表板內容 (Dashboard Content) -->
+        <div class="flex-1 overflow-y-auto p-6 scroll-smooth bg-slate-50 dark:bg-slate-900 transition-colors duration-300">
+            
+            <!-- KPI 數據卡片區域 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <!-- 碳排放 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1 dark:text-slate-400">範疇 1+2 碳排放量 (E)</p>
+                            <h3 class="text-2xl font-bold text-slate-800 dark:text-white">1,245 <span class="text-sm font-normal text-slate-500 dark:text-slate-400">tCO2e</span></h3>
+                        </div>
+                        <div class="p-2 bg-blue-50 rounded-lg text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
+                            <i class="ph ph-factory text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm">
+                        <span class="text-esg-600 font-medium flex items-center bg-esg-50 px-2 py-0.5 rounded dark:bg-esg-900/30 dark:text-esg-400">
+                            <i class="ph ph-trend-down mr-1"></i> 5.2%
+                        </span>
+                        <span class="text-slate-400 ml-2 dark:text-slate-500">較上年度</span>
+                    </div>
+                </div>
+
+                <!-- 能源使用 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1 dark:text-slate-400">再生能源比例 (E)</p>
+                            <h3 class="text-2xl font-bold text-slate-800 dark:text-white">42.5 <span class="text-sm font-normal text-slate-500 dark:text-slate-400">%</span></h3>
+                        </div>
+                        <div class="p-2 bg-yellow-50 rounded-lg text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400">
+                            <i class="ph ph-sun-dim text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm">
+                        <span class="text-esg-600 font-medium flex items-center bg-esg-50 px-2 py-0.5 rounded dark:bg-esg-900/30 dark:text-esg-400">
+                            <i class="ph ph-trend-up mr-1"></i> 8.1%
+                        </span>
+                        <span class="text-slate-400 ml-2 dark:text-slate-500">較上年度</span>
+                    </div>
+                </div>
+
+                <!-- 社會指標 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1 dark:text-slate-400">員工滿意度 (S)</p>
+                            <h3 class="text-2xl font-bold text-slate-800 dark:text-white">88 <span class="text-sm font-normal text-slate-500 dark:text-slate-400">分</span></h3>
+                        </div>
+                        <div class="p-2 bg-purple-50 rounded-lg text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+                            <i class="ph ph-smiley text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm">
+                        <span class="text-esg-600 font-medium flex items-center bg-esg-50 px-2 py-0.5 rounded dark:bg-esg-900/30 dark:text-esg-400">
+                            <i class="ph ph-trend-up mr-1"></i> 2.4%
+                        </span>
+                        <span class="text-slate-400 ml-2 dark:text-slate-500">較上年度</span>
+                    </div>
+                </div>
+
+                <!-- 治理指標 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow dark:bg-slate-800 dark:border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm font-medium text-slate-500 mb-1 dark:text-slate-400">ESG 綜合評等 (G)</p>
+                            <h3 class="text-2xl font-bold text-esg-600 dark:text-esg-400">AA <span class="text-sm font-normal text-slate-500 dark:text-slate-400">級</span></h3>
+                        </div>
+                        <div class="p-2 bg-esg-50 rounded-lg text-esg-600 dark:bg-esg-900/30 dark:text-esg-400">
+                            <i class="ph ph-shield-check text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center text-sm">
+                        <span class="text-slate-500 font-medium flex items-center bg-slate-100 px-2 py-0.5 rounded dark:bg-slate-700 dark:text-slate-300">
+                            <i class="ph ph-minus mr-1"></i> 穩定
+                        </span>
+                        <span class="text-slate-400 ml-2 dark:text-slate-500">MSCI 評級基準</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 圖表區域 1 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- 碳排放趨勢 (佔2欄寬) -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm lg:col-span-2 dark:bg-slate-800 dark:border-slate-700 transition-colors">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">年度碳排放與減碳目標趨勢</h3>
+                        <button class="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 transition-colors dark:hover:bg-slate-700">
+                            <i class="ph ph-dots-three text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="relative h-72 w-full">
+                        <canvas id="emissionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 能源結構圓餅圖 (佔1欄寬) -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm dark:bg-slate-800 dark:border-slate-700 transition-colors">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">能源使用結構</h3>
+                        <button class="p-1.5 hover:bg-slate-50 rounded-lg text-slate-400 transition-colors dark:hover:bg-slate-700">
+                            <i class="ph ph-dots-three text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="relative h-64 w-full flex justify-center mt-4">
+                        <canvas id="energyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 圖表區域 2 & 數據表 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+                <!-- 社會指標長條圖 -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm dark:bg-slate-800 dark:border-slate-700 transition-colors">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">勞動力多元化指標 (性別與年齡)</h3>
+                    </div>
+                    <div class="relative h-64 w-full">
+                        <canvas id="socialChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 近期永續專案列表 -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col dark:bg-slate-800 dark:border-slate-700 transition-colors">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center dark:border-slate-700">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">近期推動專案進度</h3>
+                        <a href="#" class="text-sm text-esg-600 hover:text-esg-700 font-medium dark:text-esg-400 dark:hover:text-esg-300">查看全部</a>
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-0">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 text-slate-500 sticky top-0 dark:bg-slate-700/50 dark:text-slate-300">
+                                <tr>
+                                    <th class="px-6 py-3 font-medium">專案名稱</th>
+                                    <th class="px-6 py-3 font-medium">類別</th>
+                                    <th class="px-6 py-3 font-medium">進度</th>
+                                    <th class="px-6 py-3 font-medium">狀態</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-700 dark:divide-slate-700/50 dark:text-slate-300">
+                                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-700/30">
+                                    <td class="px-6 py-4 font-medium dark:text-slate-200">太陽能屋頂建置第二期</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium dark:bg-green-900/30 dark:text-green-400">環境 (E)</span></td>
+                                    <td class="px-6 py-4">
+                                        <div class="w-full bg-slate-200 rounded-full h-1.5 mb-1 dark:bg-slate-600">
+                                            <div class="bg-green-500 h-1.5 rounded-full" style="width: 85%"></div>
+                                        </div>
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">85%</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-green-600 font-medium dark:text-green-400">進行中</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-700/30">
+                                    <td class="px-6 py-4 font-medium dark:text-slate-200">供應商勞權稽核計畫</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-medium dark:bg-blue-900/30 dark:text-blue-400">社會 (S)</span></td>
+                                    <td class="px-6 py-4">
+                                        <div class="w-full bg-slate-200 rounded-full h-1.5 mb-1 dark:bg-slate-600">
+                                            <div class="bg-blue-500 h-1.5 rounded-full" style="width: 100%"></div>
+                                        </div>
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">100%</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-slate-400 font-medium dark:text-slate-500">已完成</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-700/30">
+                                    <td class="px-6 py-4 font-medium dark:text-slate-200">資安防護與隱私升級</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-medium dark:bg-purple-900/30 dark:text-purple-400">治理 (G)</span></td>
+                                    <td class="px-6 py-4">
+                                        <div class="w-full bg-slate-200 rounded-full h-1.5 mb-1 dark:bg-slate-600">
+                                            <div class="bg-purple-500 h-1.5 rounded-full" style="width: 40%"></div>
+                                        </div>
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">40%</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-green-600 font-medium dark:text-green-400">進行中</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50 transition-colors dark:hover:bg-slate-700/30">
+                                    <td class="px-6 py-4 font-medium dark:text-slate-200">廢棄物零掩埋計畫</td>
+                                    <td class="px-6 py-4"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-medium dark:bg-green-900/30 dark:text-green-400">環境 (E)</span></td>
+                                    <td class="px-6 py-4">
+                                        <div class="w-full bg-slate-200 rounded-full h-1.5 mb-1 dark:bg-slate-600">
+                                            <div class="bg-green-500 h-1.5 rounded-full" style="width: 10%"></div>
+                                        </div>
+                                        <span class="text-xs text-slate-500 dark:text-slate-400">10%</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-orange-500 font-medium dark:text-orange-400">剛啟動</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 圖表區域 3: 魚骨圖 (要因分析) -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-6 dark:bg-slate-800 dark:border-slate-700 transition-colors">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center">
+                            <i class="ph ph-fish text-2xl mr-2 text-esg-600 dark:text-esg-400"></i> 
+                            要因分析 (Fishbone Diagram)
+                        </h3>
+                        <p class="text-sm text-slate-500 mt-1 dark:text-slate-400">主題：淨零排放目標推動受阻之潛在要因</p>
+                    </div>
+                    <button class="px-4 py-2 bg-esg-50 text-esg-700 rounded-lg text-sm font-medium hover:bg-esg-100 transition-colors dark:bg-esg-900/40 dark:text-esg-400 dark:hover:bg-esg-900/60">
+                        匯出報告
+                    </button>
+                </div>
+
+                <!-- 魚骨圖容器 (水平捲動以適應手機) -->
+                <div class="w-full overflow-x-auto pb-4">
+                    <div class="relative w-full h-[360px] min-w-[850px] flex items-center font-sans">
+                        
+                        <!-- 魚骨主幹 (Spine) -->
+                        <div class="absolute left-4 right-[160px] h-2 bg-slate-300 dark:bg-slate-600 top-1/2 -translate-y-1/2 rounded-l-full z-0 transition-colors"></div>
+                        <!-- 箭頭 -->
+                        <div class="absolute right-[145px] top-1/2 -translate-y-1/2 w-0 h-0 border-t-[10px] border-t-transparent border-l-[16px] border-l-slate-300 dark:border-l-slate-600 border-b-[10px] border-b-transparent z-0 transition-colors"></div>
+
+                        <!-- 魚頭 (問題節點 / Effect) -->
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 bg-red-50 border-2 border-red-300 text-red-700 p-4 rounded-xl font-bold w-32 text-center shadow-md z-10 dark:bg-red-900/30 dark:border-red-700 dark:text-red-400">
+                            淨零推動<br>進度落後
+                        </div>
+
+                        <!-- 魚刺 上半部 (Top Branches) -->
+                        <!-- Top 1: 供應鏈 -->
+                        <div class="absolute left-[10%] bottom-[50%] flex flex-col items-center">
+                            <div class="bg-blue-50 border-2 border-blue-300 text-blue-700 px-4 py-1.5 rounded-lg font-bold shadow-sm z-10 w-28 text-center text-sm dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-400">供應鏈管理</div>
+                            <div class="w-1 h-24 bg-slate-300 dark:bg-slate-600 relative transition-colors">
+                                <div class="absolute left-3 top-3 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-blue-600 cursor-pointer">範疇三數據難以盤查</div>
+                                <div class="absolute left-3 top-12 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-blue-600 cursor-pointer">供應商減碳配合度低</div>
+                            </div>
+                        </div>
+
+                        <!-- Top 2: 內部管理 -->
+                        <div class="absolute left-[40%] bottom-[50%] flex flex-col items-center">
+                            <div class="bg-purple-50 border-2 border-purple-300 text-purple-700 px-4 py-1.5 rounded-lg font-bold shadow-sm z-10 w-28 text-center text-sm dark:bg-purple-900/30 dark:border-purple-700 dark:text-purple-400">內部管理</div>
+                            <div class="w-1 h-32 bg-slate-300 dark:bg-slate-600 relative transition-colors">
+                                <div class="absolute left-3 top-4 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-purple-600 cursor-pointer">跨部門溝通成本高</div>
+                                <div class="absolute left-3 top-12 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-purple-600 cursor-pointer">員工永續意識待加強</div>
+                                <div class="absolute left-3 top-20 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-purple-600 cursor-pointer">KPI 尚未與減碳綁定</div>
+                            </div>
+                        </div>
+
+                        <!-- Top 3: 技術限制 -->
+                        <div class="absolute left-[70%] bottom-[50%] flex flex-col items-center">
+                            <div class="bg-orange-50 border-2 border-orange-300 text-orange-700 px-4 py-1.5 rounded-lg font-bold shadow-sm z-10 w-28 text-center text-sm dark:bg-orange-900/30 dark:border-orange-700 dark:text-orange-400">技術限制</div>
+                            <div class="w-1 h-24 bg-slate-300 dark:bg-slate-600 relative transition-colors">
+                                <div class="absolute left-3 top-4 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-orange-600 cursor-pointer">製程全面電氣化困難</div>
+                                <div class="absolute left-3 top-12 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-orange-600 cursor-pointer">再生能源儲能系統不足</div>
+                            </div>
+                        </div>
+
+                        <!-- 魚刺 下半部 (Bottom Branches) -->
+                        <!-- Bottom 1: 資金投入 -->
+                        <div class="absolute left-[25%] top-[50%] flex flex-col items-center">
+                            <div class="w-1 h-28 bg-slate-300 dark:bg-slate-600 relative transition-colors">
+                                <div class="absolute left-3 bottom-3 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-green-600 cursor-pointer">綠色融資門檻較高</div>
+                                <div class="absolute left-3 bottom-12 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-green-600 cursor-pointer">初期設備改造成本龐大</div>
+                            </div>
+                            <div class="bg-green-50 border-2 border-green-300 text-green-700 px-4 py-1.5 rounded-lg font-bold shadow-sm z-10 w-28 text-center text-sm dark:bg-green-900/30 dark:border-green-700 dark:text-green-400">資金與成本</div>
+                        </div>
+
+                        <!-- Bottom 2: 政策與法規 -->
+                        <div class="absolute left-[55%] top-[50%] flex flex-col items-center">
+                            <div class="w-1 h-24 bg-slate-300 dark:bg-slate-600 relative transition-colors">
+                                <div class="absolute left-3 bottom-4 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-teal-600 cursor-pointer">國內碳費徵收機制未明朗</div>
+                                <div class="absolute left-3 bottom-12 text-xs text-slate-600 whitespace-nowrap before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-mt-[1px] before:w-3 before:h-0.5 before:bg-slate-300 dark:text-slate-300 dark:before:bg-slate-600 hover:text-teal-600 cursor-pointer">CBAM 等國際法規變動快</div>
+                            </div>
+                            <div class="bg-teal-50 border-2 border-teal-300 text-teal-700 px-4 py-1.5 rounded-lg font-bold shadow-sm z-10 w-28 text-center text-sm dark:bg-teal-900/30 dark:border-teal-700 dark:text-teal-400">政策與法規</div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- 頁尾 -->
+            <footer class="text-center text-sm text-slate-400 mt-8 pb-4 dark:text-slate-500">
+                &copy; 2026 ESG Dashboard Template. All rights reserved.
+            </footer>
+
+        </div>
+    </main>
+
+    <!-- JavaScript - 產生 Chart.js 圖表與深色模式控制 -->
+    <script>
+        // === 1. 深色模式切換邏輯 ===
+        const htmlElement = document.documentElement;
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // 檢查系統偏好或本地儲存
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlElement.classList.add('dark');
+            themeIcon.classList.replace('ph-moon', 'ph-sun');
+        } else {
+            htmlElement.classList.remove('dark');
+            themeIcon.classList.replace('ph-sun', 'ph-moon');
+        }
+
+        // 定義共用的圖表實例變數，以便後續更新
+        let emissionChartInstance = null;
+        let energyChartInstance = null;
+        let socialChartInstance = null;
+
+        // 切換按鈕事件
+        themeToggleBtn.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            const isDark = htmlElement.classList.contains('dark');
+            
+            if (isDark) {
+                localStorage.theme = 'dark';
+                themeIcon.classList.replace('ph-moon', 'ph-sun');
+            } else {
+                localStorage.theme = 'light';
+                themeIcon.classList.replace('ph-sun', 'ph-moon');
+            }
+            // 重新繪製圖表以更新顏色
+            updateChartTheme(isDark);
+        });
+
+        // 根據當前主題取得圖表所需的顏色
+        function getChartColors(isDark) {
+            return {
+                textColor: isDark ? '#cbd5e1' : '#64748b', // slate-300 : slate-500
+                gridColor: isDark ? '#334155' : '#f1f5f9', // slate-700 : slate-100
+                tooltipBg: isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(15, 23, 42, 0.9)', // slate-800 : slate-900
+                pieColors: isDark 
+                    ? ['#64748b', '#fbbf24', '#38bdf8', '#4ade80'] // Darker variants
+                    : ['#94a3b8', '#fcd34d', '#38bdf8', '#4ade80']  // Lighter variants
+            };
+        }
+
+        // === 2. 建立圖表函數 ===
+        function initCharts() {
+            const isDark = htmlElement.classList.contains('dark');
+            const colors = getChartColors(isDark);
+            
+            // 設定通用字體
+            Chart.defaults.font.family = "'Noto Sans TC', sans-serif";
+            Chart.defaults.color = colors.textColor;
+
+            // 1. 碳排放趨勢圖
+            const ctxEmission = document.getElementById('emissionChart').getContext('2d');
+            emissionChartInstance = new Chart(ctxEmission, {
+                type: 'bar',
+                data: {
+                    labels: ['2021', '2022', '2023', '2024', '2025', '2026'],
+                    datasets: [
+                        {
+                            type: 'line',
+                            label: '減碳目標 (SBTi)',
+                            data: [1500, 1450, 1400, 1350, 1300, 1250],
+                            borderColor: '#f59e0b', // amber-500
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.1,
+                            pointBackgroundColor: '#f59e0b'
+                        },
+                        {
+                            type: 'bar',
+                            label: '實際排放量 (tCO2e)',
+                            data: [1520, 1480, 1410, 1370, 1310, 1245],
+                            backgroundColor: '#22c55e', // esg-500
+                            borderRadius: 4,
+                            barPercentage: 0.6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, color: colors.textColor } },
+                        tooltip: { backgroundColor: colors.tooltipBg, padding: 12, cornerRadius: 8 }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false, min: 1000,
+                            grid: { borderDash: [4, 4], color: colors.gridColor },
+                            ticks: { color: colors.textColor }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: colors.textColor }
+                        }
+                    }
+                }
+            });
+
+            // 2. 能源結構圖
+            const ctxEnergy = document.getElementById('energyChart').getContext('2d');
+            energyChartInstance = new Chart(ctxEnergy, {
+                type: 'doughnut',
+                data: {
+                    labels: ['市電 (非再生)', '太陽能', '風力購買合約', '生質能'],
+                    datasets: [{
+                        data: [57.5, 25.0, 12.5, 5.0],
+                        backgroundColor: colors.pieColors,
+                        borderWidth: 0, hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, color: colors.textColor } },
+                        tooltip: { backgroundColor: colors.tooltipBg, callbacks: { label: function(context) { return ' ' + context.label + ': ' + context.raw + '%'; } } }
+                    }
+                }
+            });
+
+            // 3. 社會指標圖
+            const ctxSocial = document.getElementById('socialChart').getContext('2d');
+            socialChartInstance = new Chart(ctxSocial, {
+                type: 'bar',
+                data: {
+                    labels: ['研發部門', '業務部門', '行政管理', '生產製造'],
+                    datasets: [
+                        {
+                            label: '男性員工', data: [65, 45, 30, 80],
+                            backgroundColor: '#3b82f6', // blue-500
+                            borderRadius: {topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4}
+                        },
+                        {
+                            label: '女性員工', data: [35, 55, 70, 20],
+                            backgroundColor: '#ec4899', // pink-500
+                            borderRadius: {topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0}
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8, color: colors.textColor } },
+                        tooltip: { backgroundColor: colors.tooltipBg }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true, grid: { display: false },
+                            ticks: { color: colors.textColor }
+                        },
+                        y: {
+                            stacked: true, beginAtZero: true, max: 100,
+                            ticks: { callback: function(value) { return value + '%' }, color: colors.textColor },
+                            grid: { borderDash: [4, 4], color: colors.gridColor }
+                        }
+                    }
+                }
+            });
+        }
+
+        // === 3. 更新圖表主題函數 (當切換暗黑模式時呼叫) ===
+        function updateChartTheme(isDark) {
+            const colors = getChartColors(isDark);
+            Chart.defaults.color = colors.textColor;
+
+            // 更新排放圖表
+            if (emissionChartInstance) {
+                emissionChartInstance.options.plugins.legend.labels.color = colors.textColor;
+                emissionChartInstance.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                emissionChartInstance.options.scales.x.ticks.color = colors.textColor;
+                emissionChartInstance.options.scales.y.ticks.color = colors.textColor;
+                emissionChartInstance.options.scales.y.grid.color = colors.gridColor;
+                emissionChartInstance.update();
+            }
+
+            // 更新能源圖表
+            if (energyChartInstance) {
+                energyChartInstance.data.datasets[0].backgroundColor = colors.pieColors;
+                energyChartInstance.options.plugins.legend.labels.color = colors.textColor;
+                energyChartInstance.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                energyChartInstance.update();
+            }
+
+            // 更新社會指標圖表
+            if (socialChartInstance) {
+                socialChartInstance.options.plugins.legend.labels.color = colors.textColor;
+                socialChartInstance.options.plugins.tooltip.backgroundColor = colors.tooltipBg;
+                socialChartInstance.options.scales.x.ticks.color = colors.textColor;
+                socialChartInstance.options.scales.y.ticks.color = colors.textColor;
+                socialChartInstance.options.scales.y.grid.color = colors.gridColor;
+                socialChartInstance.update();
+            }
+        }
+
+        // 頁面載入完成後初始化圖表
+        document.addEventListener('DOMContentLoaded', initCharts);
+
+    </script>
+</body>
+</html>
